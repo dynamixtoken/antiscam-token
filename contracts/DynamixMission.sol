@@ -138,6 +138,7 @@ contract DynamixMission {
 	struct Wallet {
         address wallet; 
         string name;  
+        string tg;  
     }
 	
 	Wallet public Buyer;
@@ -157,6 +158,7 @@ contract DynamixMission {
 	event MissionPaid();
 	event MissionCanceled();
 	event MissionAccepted();
+	event MissionGivenUp();
 
 	receive() external payable {}
 
@@ -170,11 +172,13 @@ contract DynamixMission {
         _;
     }
 	
-	constructor(address buyerWallet, string memory buyerName, address sellerWallet, string memory sellerName, string memory missionDescription) public {
+	constructor(address buyerWallet, string memory buyerName, string memory buyerTG
+				, address sellerWallet, string memory sellerName, string memory sellerTG
+				, string memory missionDescription) public {
 		require(buyerWallet != sellerWallet, "Buyer and Seller can't be equal");
 
-		Buyer = Wallet(buyerWallet, buyerName);
-		Seller = Wallet(sellerWallet, sellerName);
+		Buyer = Wallet(buyerWallet, buyerName, buyerTG);
+		Seller = Wallet(sellerWallet, sellerName, sellerTG);
 		Description = missionDescription;
 		
 		CreationDate = block.timestamp;
@@ -182,6 +186,8 @@ contract DynamixMission {
 
 	// Finance the mission
 	function financeMission() external onlyBuyer() {
+		require(!BuyerHasCanceledMission, "Mission is canceled");
+
 		// Transfer all BNB Contract to Seller
 		
 		// Take Fees 
@@ -195,6 +201,8 @@ contract DynamixMission {
 	
 	// Pay mission to the Seller
 	function payMission() external onlyBuyer() {
+		require(BuyerHasFundedMission, "Mission is not funded");
+		require(!BuyerHasCanceledMission, "Mission is canceled");
 		// Transfer all BNB Contract to Seller
 		
 		BuyerHasPaidMission = true;
@@ -207,12 +215,24 @@ contract DynamixMission {
 		// Transfer all BNB Contract to Buyer
 		
 		BuyerHasCanceledMission = true;
+		BuyerHasFundedMission = false;
 		emit MissionCanceled();
 	}
 	
 	// Accepte the mission
-	function acceptedMission() external onlySeller() {
+	function acceptMission() external onlySeller() {
+		require(!SellerHasAcceptedMission, "The seller already accepted the mission");
+
 		SellerHasAcceptedMission = true;
 		emit MissionAccepted();
+	}
+	
+	// Give Up the mission
+	function giveUpMission() external onlySeller() {
+		require(!BuyerHasPaidMission, "Mission is already paid");
+		require(SellerHasAcceptedMission, "The seller already giveup the mission");
+
+		SellerHasAcceptedMission = false;
+		emit MissionGivenUp();
 	}
 }
