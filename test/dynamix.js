@@ -1,4 +1,5 @@
 const Contract = artifacts.require("DynamixMission");
+const MissionAmount = web3.utils.toWei("10.5", "ether");
 
 // ------------- Buyer create mission -------------------
 contract('Buyer create mission', (accounts) => {
@@ -39,11 +40,32 @@ contract('Buyer create mission', (accounts) => {
 contract('Buyer create mission, finance it and then cancel it', (accounts) => {
   it('Buyer create and finance mission', async () => {
     const c = await Contract.deployed();
-	await c.financeMission({ from: accounts[1] });
+	await c.financeMission({ from: accounts[1], value: MissionAmount });
 	
 	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
 
     assert.equal(BuyerHasFundedMission, true);
+  });
+  
+  it('Buyer Wallet paid the mission + fees', async () => {
+	var balance = await web3.eth.getBalance(accounts[1]);
+
+	var b = web3.utils.fromWei(balance);
+    assert.ok(b > 89.499);
+    assert.ok(b < 90);
+  });
+  
+  it('Smart Contract has the right mission amount', async () => {
+	const c = await Contract.deployed();
+  	var balance = await web3.eth.getBalance(c.address);
+
+    assert.equal(balance, "10000000000000000000");
+  });
+
+  it('Fees has the right amount', async () => {
+	var balance = await web3.eth.getBalance("0x34A1a24BB6C8a692e6F5f7650C89bd88cB51A28d");
+	
+    assert.equal(balance, "500000000000000000");
   });
   
   it('Buyer can cancel mission, because Seller did not accept', async () => {
@@ -54,13 +76,27 @@ contract('Buyer create mission, finance it and then cancel it', (accounts) => {
 
 	assert.equal(BuyerHasCanceledMission, true);
   });  
+  
+  it('Smart Contract has 0 BNB', async () => {
+	const c = await Contract.deployed();
+  	var balance = await web3.eth.getBalance(c.address);
+
+    assert.equal(balance, 0);
+  });
+  
+  it('Buyer Wallet is refunded', async () => {
+	var balance = await web3.eth.getBalance(accounts[1]);
+
+	var b = web3.utils.fromWei(balance);
+    assert.ok(b > 99.475);
+  });
 });
 
 // ------------- Buyer create mission, finance it, Seller Accept and giveup it and then buyer can cancel it -------------------
 contract('Buyer create mission, finance it, Seller Accept and giveup it and then buyer can cancel it', (accounts) => {
   it('Buyer create and finance mission', async () => {
     const c = await Contract.deployed();
-	await c.financeMission({ from: accounts[1] });
+	await c.financeMission({ from: accounts[1], value: MissionAmount });
 	
 	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
 
@@ -86,6 +122,20 @@ contract('Buyer create mission, finance it, Seller Accept and giveup it and then
 
 	assert.equal(BuyerHasCanceledMission, true);
   });  
+  
+  it('Smart Contract has 0 BNB', async () => {
+	const c = await Contract.deployed();
+  	var balance = await web3.eth.getBalance(c.address);
+
+    assert.equal(balance, 0);
+  });
+  
+  it('Buyer Wallet is refunded', async () => {
+	var balance = await web3.eth.getBalance(accounts[1]);
+
+	var b = web3.utils.fromWei(balance);
+    assert.ok(b > 99.475);
+  });
 });
 
 // ------------- Seller can\'t finance Mission -------------------
@@ -98,7 +148,7 @@ contract('Seller can\'t finance mission', (accounts) => {
     const c = await Contract.deployed();
 	
 	try {
-		await c.financeMission({ from: accounts[2] });
+		await c.financeMission({ from: accounts[2], value: MissionAmount });
 		assert.equal(true, false);
 	} 
 	catch (error) {
@@ -138,7 +188,7 @@ contract('Buyer can\'t accept mission', (accounts) => {
 contract('Buyer can\'t give up mission', (accounts) => {
   it('Buyer Create Mission', async () => {
     const c = await Contract.deployed();
-	await c.financeMission({ from: accounts[1] });
+	await c.financeMission({ from: accounts[1], value: MissionAmount });
 	await c.acceptMission({ from: accounts[2] });
 
   });
@@ -160,7 +210,7 @@ contract('Buyer can\'t give up mission', (accounts) => {
 contract('Buyer create mission, finance it. Seller accept it and then Buyer can\'t cancel it', (accounts) => {
   it('Buyer create and finance mission', async () => {
     const c = await Contract.deployed();
-	await c.financeMission({ from: accounts[1] });
+	await c.financeMission({ from: accounts[1], value: MissionAmount });
 	
 	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
 
@@ -192,13 +242,26 @@ contract('Buyer create mission, finance it. Seller accept it and then Buyer can\
 
 	assert.equal(BuyerHasCanceledMission, false);
   });
+  
+  it('Smart Contract has the right mission amount', async () => {
+	const c = await Contract.deployed();
+  	var balance = await web3.eth.getBalance(c.address);
+
+    assert.equal(balance, "10000000000000000000");
+  });
+
+  it('Fees has the right amount', async () => {
+	var balance = await web3.eth.getBalance("0x34A1a24BB6C8a692e6F5f7650C89bd88cB51A28d");
+	
+    assert.equal(balance, "500000000000000000");
+  });
 });
 
 // ------------- Buyer create mission, finance it. Seller accept it and then Buyer pay mission -------------------
 contract('Buyer create mission, finance it. Seller accept it and then Buyer pay mission', (accounts) => {
   it('Buyer create and finance mission', async () => {
     const c = await Contract.deployed();
-	await c.financeMission({ from: accounts[1] });
+	await c.financeMission({ from: accounts[1], value: MissionAmount });
 	
 	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
 
@@ -217,20 +280,33 @@ contract('Buyer create mission, finance it. Seller accept it and then Buyer pay 
   
   it('Buyer pay mission', async () => {
     const c = await Contract.deployed();
-	
 	await c.payMission({ from: accounts[1] });
 	
 	const BuyerHasPaidMission = await c.BuyerHasPaidMission.call();
 
 	assert.equal(BuyerHasPaidMission, true);
   });  
+  
+  it('Smart Contract has 0 BNB', async () => {
+	const c = await Contract.deployed();
+  	var balance = await web3.eth.getBalance(c.address);
+
+    assert.equal(balance, 0);
+  });
+  
+  it('Seller Wallet is credited', async () => {
+	var balance = await web3.eth.getBalance(accounts[2]);
+
+	var b = web3.utils.fromWei(balance);
+    assert.ok(b > 109.99);
+  });
 });
 
 // ------------- Buyer create mission, finance it. Seller can\'t pay mission -------------------
 contract('Buyer create mission, finance it. Seller can\'t pay mission', (accounts) => {
   it('Buyer create and finance mission', async () => {
     const c = await Contract.deployed();
-	await c.financeMission({ from: accounts[1] });
+	await c.financeMission({ from: accounts[1], value: MissionAmount });
 	
 	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
 
@@ -282,7 +358,7 @@ contract('Buyer create mission, did not finance it. Buyer can\'t pay mission', (
 contract('Buyer create mission, finance it and then cancel it. Buyer can\'t pay mission', (accounts) => {
   it('Buyer create, finance and cancel mission', async () => {
     const c = await Contract.deployed();
-	await c.financeMission({ from: accounts[1] });
+	await c.financeMission({ from: accounts[1], value: MissionAmount });
 	await c.cancelMission({ from: accounts[1] });
 	
 	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
@@ -326,7 +402,7 @@ contract('Buyer create mission, cancel it and can\'t finance it', (accounts) => 
     const c = await Contract.deployed();
 	
 	try {
-		await c.financeMission({ from: accounts[1] });
+		await c.financeMission({ from: accounts[1], value: MissionAmount });
 		assert.equal(false, true);
 	}
 	catch {
@@ -336,5 +412,154 @@ contract('Buyer create mission, cancel it and can\'t finance it', (accounts) => 
 	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
 
 	assert.equal(BuyerHasFundedMission, false);  
+  });
+});
+
+// ------------- Buyer create mission but not finance correctly -------------------
+contract('Buyer create mission but not finance correctly', (accounts) => {
+  it('Buyer create mission but not finance correctly', async () => {
+    const c = await Contract.deployed();
+	const Amount = web3.utils.toWei("0.5", "ether");
+
+	try {
+		await c.financeMission({ from: accounts[1], value: Amount });
+		assert.equal(false, true);
+	}
+	catch {
+		
+	}
+	
+	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
+	const isFunded = await c.isFunded();
+
+    assert.equal(BuyerHasFundedMission, false);
+    assert.equal(isFunded, false);
+  });  
+});
+
+// ------------- Buyer create mission, finance it. Seller accept it. Buyer call moderator, and moderator refund him -------------------
+contract('Buyer create mission, finance it. Seller accept it. Buyer call moderator, and moderator refund him', (accounts) => {
+  it('Buyer create and finance mission, seller accept the mission', async () => {
+    const c = await Contract.deployed();
+	await c.financeMission({ from: accounts[1], value: MissionAmount });
+	await c.acceptMission({ from: accounts[2] });
+
+	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
+	const SellerHasAcceptedMission = await c.SellerHasAcceptedMission.call();
+
+    assert.equal(BuyerHasFundedMission, true);
+	assert.equal(SellerHasAcceptedMission, true);
+  });
+  
+  it('Moderator refund Buyer', async () => {
+    const c = await Contract.deployed();
+	await c.mediation(100, { from: accounts[0] });
+	
+	const BuyerHasCanceledMission = await c.BuyerHasCanceledMission.call();
+	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
+
+	assert.equal(BuyerHasCanceledMission, true);
+	assert.equal(BuyerHasFundedMission, false);
+  });  
+  
+  it('Smart Contract has 0 BNB', async () => {
+	const c = await Contract.deployed();
+  	var balance = await web3.eth.getBalance(c.address);
+
+    assert.equal(balance, 0);
+  });
+  
+  it('Buyer Wallet is credited', async () => {
+	var balance = await web3.eth.getBalance(accounts[1]);
+
+	var b = web3.utils.fromWei(balance);
+    assert.ok(b > 99.475);
+  });
+});
+
+// ------------- Buyer create mission, finance it. Seller accept it. Seller call moderator, and moderator refund him -------------------
+contract('Buyer create mission, finance it. Seller accept it. Seller call moderator, and moderator refund him', (accounts) => {
+  it('Buyer create and finance mission, seller accept the mission', async () => {
+    const c = await Contract.deployed();
+	await c.financeMission({ from: accounts[1], value: MissionAmount });
+	await c.acceptMission({ from: accounts[2] });
+
+	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
+	const SellerHasAcceptedMission = await c.SellerHasAcceptedMission.call();
+
+    assert.equal(BuyerHasFundedMission, true);
+	assert.equal(SellerHasAcceptedMission, true);
+  });
+  
+  it('Moderator refund Seller', async () => {
+    const c = await Contract.deployed();
+	await c.mediation(0, { from: accounts[0] });
+	
+	const BuyerHasCanceledMission = await c.BuyerHasCanceledMission.call();
+	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
+
+	assert.equal(BuyerHasCanceledMission, true);
+	assert.equal(BuyerHasFundedMission, false);
+  });  
+  
+  it('Smart Contract has 0 BNB', async () => {
+	const c = await Contract.deployed();
+  	var balance = await web3.eth.getBalance(c.address);
+
+    assert.equal(balance, 0);
+  });
+  
+  it('Seller Wallet is credited', async () => {
+	var balance = await web3.eth.getBalance(accounts[2]);
+
+	var b = web3.utils.fromWei(balance);
+    assert.ok(b > 109.99);
+  });
+});
+
+// ------------- Buyer create mission, finance it. Seller accept it. Moderator refund them -------------------
+contract('Buyer create mission, finance it. Seller accept it. Call moderator, and moderator refund them', (accounts) => {
+  it('Buyer create and finance mission, seller accept the mission', async () => {
+    const c = await Contract.deployed();
+	await c.financeMission({ from: accounts[1], value: MissionAmount });
+	await c.acceptMission({ from: accounts[2] });
+
+	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
+	const SellerHasAcceptedMission = await c.SellerHasAcceptedMission.call();
+
+    assert.equal(BuyerHasFundedMission, true);
+	assert.equal(SellerHasAcceptedMission, true);
+  });
+  
+  it('Moderator refund Buyer and Seller (50/50)', async () => {
+    const c = await Contract.deployed();
+	await c.mediation(50, { from: accounts[0] });
+	
+	const BuyerHasCanceledMission = await c.BuyerHasCanceledMission.call();
+	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
+
+	assert.equal(BuyerHasCanceledMission, true);
+	assert.equal(BuyerHasFundedMission, false);
+  });  
+  
+  it('Smart Contract has 0 BNB', async () => {
+	const c = await Contract.deployed();
+  	var balance = await web3.eth.getBalance(c.address);
+
+    assert.equal(balance, 0);
+  });
+  
+  it('Buyer Wallet is credited', async () => {
+	var balance = await web3.eth.getBalance(accounts[1]);
+
+	var b = web3.utils.fromWei(balance);
+    assert.ok(b > 94.499);
+  });
+  
+  it('Seller Wallet is credited', async () => {
+	var balance = await web3.eth.getBalance(accounts[2]);
+
+	var b = web3.utils.fromWei(balance);
+    assert.ok(b > 104.99);
   });
 });
