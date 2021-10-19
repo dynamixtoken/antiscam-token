@@ -1,11 +1,11 @@
 const Contract = artifacts.require("DynamixMission");
-const MissionAmount = web3.utils.toWei("10.5", "ether");
+const MissionAmount = web3.utils.toWei("10.3", "ether");
 
 // ------------- Buyer create mission -------------------
 contract('Buyer create mission', (accounts) => {
   it('Mission is created correctly', async () => {
     const c = await Contract.deployed();
-	
+
 	const MissionDescription = await c.Description.call();
 	const CreationDate = await c.CreationDate.call();
 	
@@ -51,7 +51,7 @@ contract('Buyer create mission, finance it and then cancel it', (accounts) => {
 	var balance = await web3.eth.getBalance(accounts[1]);
 
 	var b = web3.utils.fromWei(balance);
-    assert.ok(b > 89.499);
+    assert.ok(b > 89.699);
     assert.ok(b < 90);
   });
   
@@ -59,15 +59,9 @@ contract('Buyer create mission, finance it and then cancel it', (accounts) => {
 	const c = await Contract.deployed();
   	var balance = await web3.eth.getBalance(c.address);
 
-    assert.equal(balance, "10000000000000000000");
+    assert.equal(balance, "10300000000000000000");
   });
 
-  it('Fees has the right amount', async () => {
-	var balance = await web3.eth.getBalance("0x34A1a24BB6C8a692e6F5f7650C89bd88cB51A28d");
-	
-    assert.equal(balance, "500000000000000000");
-  });
-  
   it('Buyer can cancel mission, because Seller did not accept', async () => {
     const c = await Contract.deployed();
 	
@@ -84,11 +78,17 @@ contract('Buyer create mission, finance it and then cancel it', (accounts) => {
     assert.equal(balance, 0);
   });
   
+  it('Fees has the right amount', async () => {
+	var balance = await web3.eth.getBalance("0x34A1a24BB6C8a692e6F5f7650C89bd88cB51A28d");
+	
+    assert.equal(balance, "50000000000000000");
+  });
+  
   it('Buyer Wallet is refunded', async () => {
 	var balance = await web3.eth.getBalance(accounts[1]);
 
 	var b = web3.utils.fromWei(balance);
-    assert.ok(b > 99.475);
+    assert.ok(b > 99.949);
   });
 });
 
@@ -130,11 +130,17 @@ contract('Buyer create mission, finance it, Seller Accept and giveup it and then
     assert.equal(balance, 0);
   });
   
+  it('Fees has the right amount', async () => {
+	var balance = await web3.eth.getBalance("0x34A1a24BB6C8a692e6F5f7650C89bd88cB51A28d");
+	
+    assert.equal(balance, "50000000000000000");
+  });
+  
   it('Buyer Wallet is refunded', async () => {
 	var balance = await web3.eth.getBalance(accounts[1]);
 
 	var b = web3.utils.fromWei(balance);
-    assert.ok(b > 99.475);
+    assert.ok(b > 99.949);
   });
 });
 
@@ -247,13 +253,7 @@ contract('Buyer create mission, finance it. Seller accept it and then Buyer can\
 	const c = await Contract.deployed();
   	var balance = await web3.eth.getBalance(c.address);
 
-    assert.equal(balance, "10000000000000000000");
-  });
-
-  it('Fees has the right amount', async () => {
-	var balance = await web3.eth.getBalance("0x34A1a24BB6C8a692e6F5f7650C89bd88cB51A28d");
-	
-    assert.equal(balance, "500000000000000000");
+    assert.equal(balance, "10300000000000000000");
   });
 });
 
@@ -299,6 +299,12 @@ contract('Buyer create mission, finance it. Seller accept it and then Buyer pay 
 
 	var b = web3.utils.fromWei(balance);
     assert.ok(b > 109.99);
+  });
+  
+  it('Fees has the right amount', async () => {
+	var balance = await web3.eth.getBalance("0x34A1a24BB6C8a692e6F5f7650C89bd88cB51A28d");
+	
+    assert.equal(balance, "300000000000000000");
   });
 });
 
@@ -419,7 +425,7 @@ contract('Buyer create mission, cancel it and can\'t finance it', (accounts) => 
 contract('Buyer create mission but not finance correctly', (accounts) => {
   it('Buyer create mission but not finance correctly', async () => {
     const c = await Contract.deployed();
-	const Amount = web3.utils.toWei("0.5", "ether");
+	const Amount = web3.utils.toWei("10", "ether");
 
 	try {
 		await c.financeMission({ from: accounts[1], value: Amount });
@@ -455,11 +461,9 @@ contract('Buyer create mission, finance it. Seller accept it. Buyer call moderat
     const c = await Contract.deployed();
 	await c.mediation(100, { from: accounts[0] });
 	
-	const BuyerHasCanceledMission = await c.BuyerHasCanceledMission.call();
-	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
+	const BuyerHasPaidMission = await c.BuyerHasPaidMission.call();
 
-	assert.equal(BuyerHasCanceledMission, true);
-	assert.equal(BuyerHasFundedMission, false);
+	assert.equal(BuyerHasPaidMission, true);
   });  
   
   it('Smart Contract has 0 BNB', async () => {
@@ -473,7 +477,13 @@ contract('Buyer create mission, finance it. Seller accept it. Buyer call moderat
 	var balance = await web3.eth.getBalance(accounts[1]);
 
 	var b = web3.utils.fromWei(balance);
-    assert.ok(b > 99.475);
+    assert.ok(b > 99.675);
+  });
+  
+  it('Fees has the right amount', async () => {
+	var balance = await web3.eth.getBalance("0x34A1a24BB6C8a692e6F5f7650C89bd88cB51A28d");
+	
+    assert.equal(balance, "300000000000000000");
   });
 });
 
@@ -495,11 +505,9 @@ contract('Buyer create mission, finance it. Seller accept it. Seller call modera
     const c = await Contract.deployed();
 	await c.mediation(0, { from: accounts[0] });
 	
-	const BuyerHasCanceledMission = await c.BuyerHasCanceledMission.call();
-	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
+	const BuyerHasPaidMission = await c.BuyerHasPaidMission.call();
 
-	assert.equal(BuyerHasCanceledMission, true);
-	assert.equal(BuyerHasFundedMission, false);
+	assert.equal(BuyerHasPaidMission, true);
   });  
   
   it('Smart Contract has 0 BNB', async () => {
@@ -514,6 +522,12 @@ contract('Buyer create mission, finance it. Seller accept it. Seller call modera
 
 	var b = web3.utils.fromWei(balance);
     assert.ok(b > 109.99);
+  });
+  
+  it('Fees has the right amount', async () => {
+	var balance = await web3.eth.getBalance("0x34A1a24BB6C8a692e6F5f7650C89bd88cB51A28d");
+	
+    assert.equal(balance, "300000000000000000");
   });
 });
 
@@ -535,11 +549,9 @@ contract('Buyer create mission, finance it. Seller accept it. Call moderator, an
     const c = await Contract.deployed();
 	await c.mediation(50, { from: accounts[0] });
 	
-	const BuyerHasCanceledMission = await c.BuyerHasCanceledMission.call();
-	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
+	const BuyerHasPaidMission = await c.BuyerHasPaidMission.call();
 
-	assert.equal(BuyerHasCanceledMission, true);
-	assert.equal(BuyerHasFundedMission, false);
+	assert.equal(BuyerHasPaidMission, true);
   });  
   
   it('Smart Contract has 0 BNB', async () => {
@@ -553,7 +565,7 @@ contract('Buyer create mission, finance it. Seller accept it. Call moderator, an
 	var balance = await web3.eth.getBalance(accounts[1]);
 
 	var b = web3.utils.fromWei(balance);
-    assert.ok(b > 94.499);
+    assert.ok(b > 94.699);
   });
   
   it('Seller Wallet is credited', async () => {
@@ -561,5 +573,11 @@ contract('Buyer create mission, finance it. Seller accept it. Call moderator, an
 
 	var b = web3.utils.fromWei(balance);
     assert.ok(b > 104.99);
+  });
+  
+  it('Fees has the right amount', async () => {
+	var balance = await web3.eth.getBalance("0x34A1a24BB6C8a692e6F5f7650C89bd88cB51A28d");
+	
+    assert.equal(balance, "300000000000000000");
   });
 });

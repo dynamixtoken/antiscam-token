@@ -143,7 +143,6 @@ contract DynamixMission {
 	
 	Wallet public Buyer;
 	Wallet public Seller;
-	address public Owner;
 
 	string public Description;
 	uint public CreationDate;
@@ -155,7 +154,9 @@ contract DynamixMission {
 	bool public SellerHasAcceptedMission;
 	
 	address payable public feesAddress = payable(0x34A1a24BB6C8a692e6F5f7650C89bd88cB51A28d);
-	uint256 fees = 5;
+	address public Moderator = 0x627306090abaB3A6e1400e9345bC60c78a8BEf57;
+	uint256 successMissionFees = 30;
+	uint256 cancelMissionFees = 5;
 	
 	event MissionFunded();
 	event MissionPaid();
@@ -179,8 +180,8 @@ contract DynamixMission {
         _;
     }
 	
-	modifier onlyOwner() {
-        require(Owner == msg.sender, "Caller is not the owner");
+	modifier onlyModerator() {
+        require(Moderator == msg.sender, "Caller is not the Moderator");
         _;
     }
 	
@@ -196,18 +197,11 @@ contract DynamixMission {
 		Description = missionDescription;
 		Amount = missionAmount;
 		CreationDate = block.timestamp;
-		
-		Owner = msg.sender;
 	}
 
 	// Finance the mission
 	function financeMission() external payable onlyBuyer() {
 		require(!BuyerHasCanceledMission, "Mission is canceled");
-		
-		// Take Fees 
-		uint256 bnbToDynaToken = Amount.mul(fees).div(100);
-		feesAddress.transfer(bnbToDynaToken);
-		
 		require(isFunded(), "Not enough BNB provided.");
 		
 		BuyerHasFundedMission = true;
@@ -219,6 +213,10 @@ contract DynamixMission {
 		require(BuyerHasFundedMission, "Mission is not funded");
 		require(!BuyerHasCanceledMission, "Mission is canceled");
 		
+		// Take Fees 
+		uint256 bnbToDynaToken = Amount.mul(successMissionFees).div(1000);
+		feesAddress.transfer(bnbToDynaToken);
+
 		// Transfer all BNB Contract to Seller
 		uint256 contractBnb = address(this).balance;
 		address payable sellerAddress = payable(Seller.wallet);
@@ -232,10 +230,16 @@ contract DynamixMission {
 	function cancelMission() external onlyBuyer() {
 		require(!SellerHasAcceptedMission, "The seller has accepted the mission, you can't cancel it");
 		
-		// Transfer all BNB Contract to Buyer
-		uint256 contractBnb = address(this).balance;
-		address payable buyerAddress = payable(Buyer.wallet);
-		buyerAddress.transfer(contractBnb);
+		// Take Fees 
+		if(isFunded()){
+			uint256 bnbToDynaToken = Amount.mul(cancelMissionFees).div(1000);
+			feesAddress.transfer(bnbToDynaToken);
+
+			// Transfer all BNB Contract to Buyer
+			uint256 contractBnb = address(this).balance;
+			address payable buyerAddress = payable(Buyer.wallet);
+			buyerAddress.transfer(contractBnb);
+		}
 
 		BuyerHasCanceledMission = true;
 		BuyerHasFundedMission = false;
@@ -261,12 +265,17 @@ contract DynamixMission {
 	
 	// Indicates that the mission is funded 
 	function isFunded() public view returns(bool) {
-		return Amount <= address(this).balance;
+		return Amount.mul(successMissionFees).div(1000).add(Amount)  <= address(this).balance;
 	}
 	
 	// Mediation between Buyer and Seller
-	function mediation(uint256 percentageToBeRefundedToBuyer) external onlyOwner() {
-		
+	function mediation(uint256 percentageToBeRefundedToBuyer) external onlyModerator() {
+		// Take Fees 
+		uint256 bnbToDynaToken = Amount.mul(successMissionFees).div(1000);
+		if(bnbToDynaToken != 0) {
+			feesAddress.transfer(bnbToDynaToken);
+		}
+
 		// Transfer BNB to Buyer
 		uint256 contractBnb = address(this).balance;
 		uint256 bnbToBuyer = contractBnb.mul(percentageToBeRefundedToBuyer).div(100);
@@ -284,8 +293,7 @@ contract DynamixMission {
 			sellerAddress.transfer(contractBnb);
 		}
 
-		BuyerHasCanceledMission = true;
-		BuyerHasFundedMission = false;
+		BuyerHasPaidMission = true;
 		emit ModeratorIntervention(bnbToBuyer, contractBnb);
 	}
 }
