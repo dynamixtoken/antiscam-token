@@ -1,5 +1,5 @@
 const Contract = artifacts.require("DynamixMission");
-const MissionAmount = web3.utils.toWei("10.3", "ether");
+const MissionAmount = web3.utils.toWei("10", "ether");
 
 // ------------- Buyer create mission -------------------
 contract('Buyer create mission', (accounts) => {
@@ -13,12 +13,22 @@ contract('Buyer create mission', (accounts) => {
 	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
 	const BuyerHasPaidMission = await c.BuyerHasPaidMission.call();
 	const SellerHasAcceptedMission = await c.SellerHasAcceptedMission.call();
+	const isFunded = await c.isFunded();
+	const info = await c.info();
 
 	const Buyer = await c.Buyer.call();
 	const Seller = await c.Seller.call();
 
     assert.equal(MissionDescription, "Can you save Iron Man ?");
+    assert.equal(info[0], "Can you save Iron Man ?");
+    assert.equal(info[1], "10000000000000000000");
+    assert.ok(info[2] != 0);
+    assert.equal(info[3], false);
+    assert.equal(info[4], false);
+    assert.equal(info[5], false);
+    assert.equal(info[6], false);
 	
+    assert.equal(isFunded, false);
     assert.equal(BuyerHasCanceledMission, false);
     assert.equal(BuyerHasFundedMission, false);
     assert.equal(BuyerHasPaidMission, false);
@@ -51,7 +61,7 @@ contract('Buyer create mission, finance it and then cancel it', (accounts) => {
 	var balance = await web3.eth.getBalance(accounts[1]);
 
 	var b = web3.utils.fromWei(balance);
-    assert.ok(b > 89.699);
+    assert.ok(b > 89.999);
     assert.ok(b < 90);
   });
   
@@ -59,7 +69,7 @@ contract('Buyer create mission, finance it and then cancel it', (accounts) => {
 	const c = await Contract.deployed();
   	var balance = await web3.eth.getBalance(c.address);
 
-    assert.equal(balance, "10300000000000000000");
+    assert.equal(balance, "10000000000000000000");
   });
 
   it('Buyer can cancel mission, because Seller did not accept', async () => {
@@ -253,7 +263,7 @@ contract('Buyer create mission, finance it. Seller accept it and then Buyer can\
 	const c = await Contract.deployed();
   	var balance = await web3.eth.getBalance(c.address);
 
-    assert.equal(balance, "10300000000000000000");
+    assert.equal(balance, "10000000000000000000");
   });
 });
 
@@ -298,7 +308,7 @@ contract('Buyer create mission, finance it. Seller accept it and then Buyer pay 
 	var balance = await web3.eth.getBalance(accounts[2]);
 
 	var b = web3.utils.fromWei(balance);
-    assert.ok(b > 109.99);
+    assert.ok(b > 109.69);
   });
   
   it('Fees has the right amount', async () => {
@@ -425,11 +435,11 @@ contract('Buyer create mission, cancel it and can\'t finance it', (accounts) => 
 contract('Buyer create mission but not finance correctly', (accounts) => {
   it('Buyer create mission but not finance correctly', async () => {
     const c = await Contract.deployed();
-	const Amount = web3.utils.toWei("10", "ether");
+	const Amount = web3.utils.toWei("9.99", "ether");
 
 	try {
 		await c.financeMission({ from: accounts[1], value: Amount });
-		assert.equal(false, true);
+		assert.equal(false, true, "mission not funded correctly");
 	}
 	catch {
 		
@@ -477,7 +487,8 @@ contract('Buyer create mission, finance it. Seller accept it. Buyer call moderat
 	var balance = await web3.eth.getBalance(accounts[1]);
 
 	var b = web3.utils.fromWei(balance);
-    assert.ok(b > 99.675);
+
+    assert.ok(b > 99.699);
   });
   
   it('Fees has the right amount', async () => {
@@ -521,7 +532,7 @@ contract('Buyer create mission, finance it. Seller accept it. Seller call modera
 	var balance = await web3.eth.getBalance(accounts[2]);
 
 	var b = web3.utils.fromWei(balance);
-    assert.ok(b > 109.99);
+    assert.ok(b > 109.69);
   });
   
   it('Fees has the right amount', async () => {
@@ -565,14 +576,14 @@ contract('Buyer create mission, finance it. Seller accept it. Call moderator, an
 	var balance = await web3.eth.getBalance(accounts[1]);
 
 	var b = web3.utils.fromWei(balance);
-    assert.ok(b > 94.699);
+    assert.ok(b > 94.849);
   });
   
   it('Seller Wallet is credited', async () => {
 	var balance = await web3.eth.getBalance(accounts[2]);
 
 	var b = web3.utils.fromWei(balance);
-    assert.ok(b > 104.99);
+    assert.ok(b > 104.84);
   });
   
   it('Fees has the right amount', async () => {

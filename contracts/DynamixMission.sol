@@ -189,8 +189,6 @@ contract DynamixMission {
 				, address sellerWallet, string memory sellerName, string memory sellerTG
 				, string memory missionDescription, uint256 missionAmount) public {
 		require(buyerWallet != sellerWallet, "Buyer and Seller can't be equal");
-		require(buyerWallet != msg.sender, "Buyer can't be the owner");
-		require(sellerWallet != msg.sender, "Seller can't be the owner");
 
 		Buyer = Wallet(buyerWallet, buyerName, buyerTG);
 		Seller = Wallet(sellerWallet, sellerName, sellerTG);
@@ -201,6 +199,7 @@ contract DynamixMission {
 
 	// Finance the mission
 	function financeMission() external payable onlyBuyer() {
+		require(!BuyerHasFundedMission, "Mission is funded");
 		require(!BuyerHasCanceledMission, "Mission is canceled");
 		require(isFunded(), "Not enough BNB provided.");
 		
@@ -265,7 +264,7 @@ contract DynamixMission {
 	
 	// Indicates that the mission is funded 
 	function isFunded() public view returns(bool) {
-		return Amount.mul(successMissionFees).div(1000).add(Amount)  <= address(this).balance;
+		return Amount <= address(this).balance;
 	}
 	
 	// Mediation between Buyer and Seller
@@ -295,5 +294,16 @@ contract DynamixMission {
 
 		BuyerHasPaidMission = true;
 		emit ModeratorIntervention(bnbToBuyer, contractBnb);
+	}
+	
+	function info() public view returns(string memory, uint256, uint, bool, bool, bool, bool) {
+		return ( Description
+				, Amount
+				, CreationDate
+				, BuyerHasCanceledMission
+				, BuyerHasFundedMission
+				, BuyerHasPaidMission
+				, SellerHasAcceptedMission
+				);
 	}
 }
