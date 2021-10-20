@@ -154,6 +154,42 @@ contract('Buyer create mission, finance it, Seller Accept and giveup it and then
   });
 });
 
+// ------------- Buyer create mission, finance it, and can\'t finance it again -------------------
+contract('Buyer create mission, finance it, and can\'t finance it again', (accounts) => {
+  it('Buyer create and finance mission', async () => {
+    const c = await Contract.deployed();
+	await c.financeMission({ from: accounts[1], value: MissionAmount });
+	
+	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
+
+    assert.equal(BuyerHasFundedMission, true);
+  });
+  
+  it('Buyer can\'t finance mission again', async () => {
+    const c = await Contract.deployed();
+	
+	try {
+		await c.financeMission({ from: accounts[1], value: MissionAmount });
+		assert.equal(true, false, "Buyer can\'t finance mission again");
+	} 
+	catch (error) {
+		
+	}
+	
+	const BuyerHasFundedMission = await c.BuyerHasFundedMission.call();
+
+    assert.equal(BuyerHasFundedMission, true);
+  });
+  
+  it('Smart Contract has the right mission amount', async () => {
+	const c = await Contract.deployed();
+  	var balance = await web3.eth.getBalance(c.address);
+
+    assert.equal(balance, "10000000000000000000");
+  });
+  
+});
+
 // ------------- Seller can\'t finance Mission -------------------
 contract('Seller can\'t finance mission', (accounts) => {
   it('Buyer create mission', async () => {
@@ -264,6 +300,29 @@ contract('Buyer create mission, finance it. Seller accept it and then Buyer can\
   	var balance = await web3.eth.getBalance(c.address);
 
     assert.equal(balance, "10000000000000000000");
+  });
+});
+
+// ------------- Buyer create mission, has not funded it yet. Seller  can\'t accept it -------------------
+contract('Buyer create mission, has not funded it yet. Seller  can\'t accept it', (accounts) => {
+  it('Buyer create', async () => {
+    const c = await Contract.deployed();
+  });
+  
+  it('Seller  can\'t accept the mission', async () => {
+    const c = await Contract.deployed();
+	
+	try {
+		await c.acceptMission({ from: accounts[2] });
+		assert.equal(true, false, "Seller  can\'t accept the mission, because Buyer has not funded it yet");
+	}
+	catch {
+		
+	}
+	
+	const SellerHasAcceptedMission = await c.SellerHasAcceptedMission.call();
+
+	assert.equal(SellerHasAcceptedMission, false);
   });
 });
 

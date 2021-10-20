@@ -248,6 +248,7 @@ contract DynamixMission {
 	// Accepte the mission
 	function acceptMission() external onlySeller() {
 		require(!SellerHasAcceptedMission, "The seller already accepted the mission");
+		require(BuyerHasFundedMission, "Mission is not funded");
 
 		SellerHasAcceptedMission = true;
 		emit MissionAccepted();
