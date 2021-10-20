@@ -190,7 +190,7 @@
 						$('#payMission').removeAttr('disabled');
 					}
 					
-					if(isBuyer && buyerHasFundedMission && (!buyerHasPaidMission || !sellerHasAcceptedMission)){
+					if(isBuyer && buyerHasFundedMission && !buyerHasPaidMission && !sellerHasAcceptedMission){
 						$('#cancelMission').removeAttr('disabled');
 					}
 					
