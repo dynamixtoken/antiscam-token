@@ -144,8 +144,10 @@ contract DynamixMission {
 	Wallet public Buyer;
 	Wallet public Seller;
 
+	string public Title;
 	string public Description;
 	uint public CreationDate;
+	uint public DeadLineDate;
 	uint256 public Amount;
 	
 	bool public BuyerHasCanceledMission;
@@ -187,13 +189,16 @@ contract DynamixMission {
 	
 	constructor(address buyerWallet, string memory buyerName, string memory buyerTG
 				, address sellerWallet, string memory sellerName, string memory sellerTG
-				, string memory missionDescription, uint256 missionAmount) public {
+				, string memory missionTitle, string memory missionDescription
+				, uint256 missionAmount, uint missionDeadLineDate) public {
 		require(buyerWallet != sellerWallet, "Buyer and Seller can't be equal");
 
 		Buyer = Wallet(buyerWallet, buyerName, buyerTG);
 		Seller = Wallet(sellerWallet, sellerName, sellerTG);
+		Title = missionTitle;
 		Description = missionDescription;
 		Amount = missionAmount;
+		DeadLineDate = missionDeadLineDate;
 		CreationDate = block.timestamp;
 	}
 
@@ -297,9 +302,11 @@ contract DynamixMission {
 		emit ModeratorIntervention(bnbToBuyer, contractBnb);
 	}
 	
-	function info() public view returns(string memory, uint256, uint, bool, bool, bool, bool) {
-		return ( Description
+	function info() public view returns(string memory, string memory, uint256, uint, uint, bool, bool, bool, bool) {
+		return ( Title
+				, Description
 				, Amount
+				, DeadLineDate
 				, CreationDate
 				, BuyerHasCanceledMission
 				, BuyerHasFundedMission

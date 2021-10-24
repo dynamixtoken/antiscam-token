@@ -20,13 +20,15 @@ contract('Buyer create mission', (accounts) => {
 	const Seller = await c.Seller.call();
 
     assert.equal(MissionDescription, "Can you save Iron Man ?");
-    assert.equal(info[0], "Can you save Iron Man ?");
-    assert.equal(info[1], "10000000000000000000");
-    assert.ok(info[2] != 0);
-    assert.equal(info[3], false);
-    assert.equal(info[4], false);
+    assert.equal(info[0], "Save IronMan Life");
+    assert.equal(info[1], "Can you save Iron Man ?");
+    assert.equal(info[2], "10000000000000000000");
+    assert.ok(info[3] != 0);
+    assert.ok(info[4] != 0);
     assert.equal(info[5], false);
     assert.equal(info[6], false);
+    assert.equal(info[7], false);
+    assert.equal(info[8], false);
 	
     assert.equal(isFunded, false);
     assert.equal(BuyerHasCanceledMission, false);
